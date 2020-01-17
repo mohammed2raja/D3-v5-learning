@@ -16,3 +16,11 @@ body {
   margin: 1.5rem auto;
   text-align: center;
 }
+
+.area {
+  fill: url(#temperature-gradient);
+  stroke-width: 05px;
+}
+.grid-line {
+  stroke: rgba(153, 153, 153, 0.192);
+}
