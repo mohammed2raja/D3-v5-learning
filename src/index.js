@@ -17,6 +17,7 @@ const margin = {
 };
 const width = 600 - margin.left - margin.right;
 const height = 300 - margin.top - margin.bottom;
+const minYAxisValue = 20;
 
 const svgContainer = container
   .append("svg")
@@ -31,7 +32,7 @@ const svgCanvas = svgContainer
   .append("g")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-const data = [
+let data = [
   {
     date: "2007-04-23",
     close: 93.24
@@ -5155,17 +5156,70 @@ const data = [
 ];
 // parse the date / time
 var parseTime = d3.utcParse("%Y-%m-%d");
-console.log(parseTime(data[0].date));
 // format the data
 data.forEach(function(d) {
   d.date = parseTime(d.date);
   d.value = +d.close;
 });
-console.log(data);
+
+let newDate = [
+  [1571308738000, 100.8],
+  [1571308738000, 100.8],
+  [1571308738000, 100.8],
+  [1571308738000, 100.8],
+  [1571585001000, 100.8],
+  [1571585001000, 100.8],
+  [1571585001000, 100.8],
+  [1571585001000, 100.8],
+  [1571671541000, 100.9],
+  [1571671541000, 100.9],
+  [1571671541000, 100.9],
+  [1571671541000, 100.9],
+  [1571764444000, 101.0],
+  [1571764444000, 101.0],
+  [1571764444000, 101.0],
+  [1571764444000, 101.0],
+  [1571844201000, 101.1],
+  [1571844201000, 101.1],
+  [1571844201000, 101.1],
+  [1571844201000, 101.1],
+  [1571930601000, 101.1],
+  [1571930601000, 101.1],
+  [1571930601000, 101.1],
+  [1571930601000, 101.1],
+  [1572017055000, 100.9],
+  [1572017055000, 100.9],
+  [1572017055000, 100.9],
+  [1572017055000, 100.9],
+  [1572103504000, 101.5],
+  [1572103504000, 101.5],
+  [1572103504000, 101.5],
+  [1572103504000, 101.5],
+  [1572189801000, 101.1],
+  [1572189801000, 101.1],
+  [1572189801000, 101.1],
+  [1572189801000, 101.1],
+  [1572276255000, 101.5],
+  [1572276255000, 101.5],
+  [1572276255000, 101.5],
+  [1572276255000, 101.5],
+  [1572362741000, 101.2],
+  [1572449141000, 101.2],
+  [1572449141000, 101.2],
+  [1572449141000, 101.2],
+  [1572449141000, 101.2]
+];
+// format the data
+data = newDate.map(d => {
+  return {
+    date: new Date(d[0]),
+    value: +d[1]
+  };
+});
 /* Y Axix */
 const yScale = d3
   .scaleLinear()
-  .domain([0, d3.max(data, d => d.value)])
+  .domain([minYAxisValue, d3.max(data, d => d.value)])
   .nice()
   .range([height - margin.bottom, margin.top]);
 const yAxis = g =>
@@ -5183,7 +5237,6 @@ const yAxis = g =>
     );
 
 /* X axis */
-console.log(d3.extent(data, d => d.date));
 const xScale = d3
   .scaleUtc()
   .domain(d3.extent(data, d => d.date))
@@ -5199,7 +5252,7 @@ const area = d3
   .area()
   .curve(curve)
   .x(d => xScale(d.date))
-  .y0(yScale(0))
+  .y0(yScale(minYAxisValue))
   .y1(d => yScale(d.value));
 
 svgCanvas
