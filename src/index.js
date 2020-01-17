@@ -18,6 +18,7 @@ const margin = {
 const width = 600 - margin.left - margin.right;
 const height = 300 - margin.top - margin.bottom;
 const minYAxisValue = 90;
+const maxYAxisValue = 104;
 const highlightValue1 = 95;
 const highlightValue2 = 103;
 
@@ -88,11 +89,12 @@ data = data.map(d => {
     value: +d[1]
   };
 });
+console.log(d3.max(data, d => d.value));
 /* Y Axix */
 const yScale = d3
   .scaleLinear()
-  .domain([minYAxisValue, 104])
-  // .domain([minYAxisValue, d3.max(data, d => d.value)])
+  .domain([minYAxisValue, maxYAxisValue])
+  // .domain([minYAxisValue, d3.max(data, d => d.value) + 2])
   .nice()
   .range([height - margin.bottom, margin.top]);
 const yAxis = g =>
@@ -116,7 +118,7 @@ const xAxis = g =>
     .call(
       d3
         .axisBottom(xScale)
-        .ticks(10)
+        .ticks(20)
         .tickFormat(d3.utcFormat("%m/%d"))
     )
     .selectAll("text")
@@ -191,12 +193,80 @@ const xGrid = d3
 const yGrid = d3
   .selectAll(".container #y-axis g.tick")
   .append("line")
-  .attr("class", d => {
-    if(d === highlightValue1 || d === highlightValue2) return "highlightGrid"
-    return "grid-line"
-  })
+  .attr("class", "grid-line")
   .attr("x1", 0)
   .attr("x2", width - (margin.left + margin.right))
   .attr("y1", 0)
   .attr("y2", 0);
 
+const drawMajorLine = value => {
+  const INNER_HEIGHT = height - (margin.top + margin.bottom);
+  const AVAILABLE_HEIGHT = maxYAxisValue - minYAxisValue;
+  const RELATED_HEIGHT = AVAILABLE_HEIGHT - (value - minYAxisValue);
+  const ACTUAL_HEIGHT = (RELATED_HEIGHT / AVAILABLE_HEIGHT) * INNER_HEIGHT;
+  svgCanvas
+    .append("g")
+    .append("line")
+    .attr("class", "highlightGrid")
+    .attr("x1", margin.left)
+    .attr("x2", width - margin.right)
+    .attr("y1", margin.top + ACTUAL_HEIGHT)
+    .attr("y2", margin.top + ACTUAL_HEIGHT);
+};
+drawMajorLine(highlightValue1);
+drawMajorLine(highlightValue2);
+
+
+
+function hoverMouseOn() {
+  var mouse_x = d3.mouse(this)[0];
+  var mouse_y = d3.mouse(this)[1];
+  var graph_y = yScale.invert(mouse_y);
+  var graph_x = xScale.invert(mouse_x);
+
+  hoverLine.attr("x1", mouse_x).attr("x2", mouse_x);
+  hoverLineGroup.style("opacity", 1);
+
+  var mouseDate = xScale.invert(mouse_x);
+  const bisect = d3.bisector(function(d) {
+    return d.date;
+  }).right;
+  const idx = bisect(data, graph_x);
+
+  var d0 = data[idx - 1];
+  var d1 = data[idx];
+  if (d0 && d1) {
+    var d = mouseDate - d0[0] > d1[0] - mouseDate ? d1 : d0;
+    hoverTT.text("Date: "+ d3.utcFormat("%m/%d")(d.date)); 
+    hoverTT.attr('x', mouse_x);
+    hoverTT.attr('y', yScale(d.value));
+
+    cle
+    .attr('cx', mouse_x)
+    .attr('cy', yScale(d.value));
+  }
+}
+function hoverMouseOff(d) {
+  hoverLineGroup.style("opacity", 1e-6);
+}
+
+//Line chart mouse over
+var hoverLineGroup = svgCanvas.append("g").attr("class", "hover-line");
+
+var hoverLine = hoverLineGroup
+  .append("line")
+  .attr("stroke", "#000")
+  .attr("x1", -100)
+  .attr("x2", -100)
+  .attr("y1", margin.top)
+  .attr("y2", height - margin.bottom);
+
+var hoverTT = hoverLineGroup.append('text')
+  .attr("class", "hover-tex capo")
+  .attr('dy', "0.35em");
+
+var cle = hoverLineGroup.append("circle")
+  .attr("r", 4.5);
+
+
+svgCanvas.select('.area').on("mouseout", hoverMouseOff).on("mousemove", hoverMouseOn);
