@@ -17,7 +17,9 @@ const margin = {
 };
 const width = 600 - margin.left - margin.right;
 const height = 300 - margin.top - margin.bottom;
-const minYAxisValue = 99;
+const minYAxisValue = 90;
+const highlightValue1 = 95;
+const highlightValue2 = 103;
 
 const svgContainer = container
   .append("svg")
@@ -89,7 +91,8 @@ data = data.map(d => {
 /* Y Axix */
 const yScale = d3
   .scaleLinear()
-  .domain([minYAxisValue, d3.max(data, d => d.value)])
+  .domain([minYAxisValue, 104])
+  // .domain([minYAxisValue, d3.max(data, d => d.value)])
   .nice()
   .range([height - margin.bottom, margin.top]);
 const yAxis = g =>
@@ -104,12 +107,25 @@ const xScale = d3
   .scaleUtc()
   .domain(d3.extent(data, d => d.date))
   .range([margin.left, width - margin.right]);
+
 const xAxis = g =>
   g
     .attr("id", "x-axis")
     .attr("class", "axis")
     .attr("transform", `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(xScale).ticks(10));
+    .call(
+      d3
+        .axisBottom(xScale)
+        .ticks(10)
+        .tickFormat(d3.utcFormat("%m/%d"))
+    )
+    .selectAll("text")
+    .style("text-anchor", "end")
+    .attr("dx", "-.8em")
+    .attr("dy", ".15em")
+    .attr("transform", function(d) {
+      return "rotate(-65)";
+    });
 
 var areaGradient = svgContainer
   .append("defs")
@@ -132,6 +148,19 @@ areaGradient
   .attr("stop-opacity", 0);
 
 const curve = d3.curveLinear;
+
+const line = d3
+  .line()
+  // .curve() allows to specify the behavior of the line itself
+  .curve(curve)
+  .x(d => xScale(d.date))
+  .y(d => yScale(d.value));
+// include a path element for the line, specifying the `d` attribute through the line generator
+svgCanvas
+  .append("path")
+  .attr("class", "line")
+  .attr("d", line(data));
+
 const area = d3
   .area()
   .curve(curve)
@@ -150,7 +179,7 @@ svgCanvas.append("g").call(xAxis);
 
 // target all the horizontal ticks and include line elements making up vertical grid lines
 const xGrid = d3
-  .selectAll("#x-axis g.tick")
+  .selectAll(".container #x-axis g.tick")
   .append("line")
   .attr("class", "grid-line")
   .attr("x1", 0)
@@ -160,10 +189,14 @@ const xGrid = d3
 
 // repeat the operation, but with regards to horizontal grid lines
 const yGrid = d3
-  .selectAll("#y-axis g.tick")
+  .selectAll(".container #y-axis g.tick")
   .append("line")
-  .attr("class", "grid-line")
+  .attr("class", d => {
+    if(d === highlightValue1 || d === highlightValue2) return "highlightGrid"
+    return "grid-line"
+  })
   .attr("x1", 0)
   .attr("x2", width - (margin.left + margin.right))
   .attr("y1", 0)
   .attr("y2", 0);
+

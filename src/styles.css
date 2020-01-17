@@ -6,7 +6,7 @@
 }
 body {
   width: 100%;
-  font-family: 'Lato', sans-serif;
+  font-family: "Lato", sans-serif;
   color: #555;
   background: #ddd;
 }
@@ -19,8 +19,17 @@ body {
 
 .area {
   fill: url(#temperature-gradient);
-  stroke-width: 05px;
+  stroke-width: 1px;
 }
 .grid-line {
   stroke: rgba(153, 153, 153, 0.192);
+}
+svg path.line {
+  fill: none;
+  stroke: rgb(250, 3, 3);
+  stroke-width: 1px;
+}
+.highlightGrid {
+  stroke: rgb(250, 3, 3);
+  stroke-width: 1px;
 }
