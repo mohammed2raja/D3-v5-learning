@@ -223,6 +223,10 @@ function hoverMouseOn() {
   var mouse_y = d3.mouse(this)[1];
   var graph_y = yScale.invert(mouse_y);
   var graph_x = xScale.invert(mouse_x);
+  if(mouse_x <= margin.left || mouse_x >= width - margin.right || mouse_y >= height - margin.bottom){
+    return
+  }
+
 
   hoverLine.attr("x1", mouse_x).attr("x2", mouse_x);
   hoverLineGroup.style("opacity", 1);
@@ -237,13 +241,19 @@ function hoverMouseOn() {
   var d1 = data[idx];
   if (d0 && d1) {
     var d = mouseDate - d0[0] > d1[0] - mouseDate ? d1 : d0;
-    hoverTT.text("Date: "+ d3.utcFormat("%m/%d")(d.date)); 
-    hoverTT.attr('x', mouse_x);
-    hoverTT.attr('y', yScale(d.value));
+    tooltipsContr.attr('transform', `translate(${mouse_x + 5},${yScale(d.value)})`)
+    tooltipsContr.style("opacity", "1");
+    tooltipsText.attr('x', '5.5em');
+    tooltipsText.attr('y', '-0.3em');
+    tooltipsText.text(d3.utcFormat("%b %d, %I:%M %p")(d.date)); 
+    tooltipsTemp.attr('x', '3em');
+    tooltipsTemp.attr('y', '1em');
+    tooltipsTemp.text(d.value); 
 
     cle
     .attr('cx', mouse_x)
-    .attr('cy', yScale(d.value));
+    .attr('cy', yScale(d.value))
+    .style("opacity", "1")
   }
 }
 function hoverMouseOff(d) {
@@ -251,9 +261,9 @@ function hoverMouseOff(d) {
 }
 
 //Line chart mouse over
-var hoverLineGroup = svgCanvas.append("g").attr("class", "hover-line");
+const hoverLineGroup = svgCanvas.append("g").attr("class", "hover-line");
 
-var hoverLine = hoverLineGroup
+const hoverLine = hoverLineGroup
   .append("line")
   .attr("stroke", "#000")
   .attr("x1", -100)
@@ -261,12 +271,49 @@ var hoverLine = hoverLineGroup
   .attr("y1", margin.top)
   .attr("y2", height - margin.bottom);
 
-var hoverTT = hoverLineGroup.append('text')
-  .attr("class", "hover-tex capo")
-  .attr('dy', "0.35em");
+  /* tooltips */
+const tooltipsContr = hoverLineGroup.append('g');
+tooltipsContr.style("opacity", "0");
+tooltipsContr.append('path')
+  .style('fill', 'white').style('stroke', 'black')
+  .attr('d', rightTooltipPath(70,30,10,5))
+
+const tooltipsText = tooltipsContr.append('text')
+  .attr('text-anchor', 'middle')
+  .attr('class', 'tooltips-text');
+
+const tooltipsTempCntr = tooltipsContr.append('text');
+const tooltipsTemp = tooltipsTempCntr.append('tspan')
+  .attr('text-anchor', 'middle')
+  .attr('class', 'tooltips-text tooltips-temp');
+
+
+
 
 var cle = hoverLineGroup.append("circle")
-  .attr("r", 4.5);
+  .style("opacity", "0")
+  .attr("stroke", "#f00")
+  .attr("stroke-width", "1")
+  .attr("fill", "#000")
+  .attr("r", 4);
 
+svgCanvas.on("mouseout", hoverMouseOff).on("mousemove", hoverMouseOn);
 
-svgCanvas.select('.area').on("mouseout", hoverMouseOff).on("mousemove", hoverMouseOn);
+function rightTooltipPath(width, height, offset, radius) {
+  const left = offset
+  const right = offset + width
+  const top = -height / 2
+  const bottom = height / 2
+  return `M 0,0 
+    L ${left},${-offset} 
+    V ${top + radius}
+    Q ${left},${top} ${left + radius},${top}  
+    H ${right - radius}   
+    Q ${right},${top} ${right},${top + radius}
+    V ${bottom - radius}
+    Q ${right},${bottom} ${right - radius},${bottom}
+    H ${left + radius}
+    Q ${left},${bottom} ${left},${bottom - radius}
+    V ${offset} 
+    L 0,0 z`
+}

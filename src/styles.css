@@ -33,3 +33,11 @@ svg path.line {
   stroke: rgb(250, 3, 3);
   stroke-width: 1px;
 }
+.tooltips-text {
+  font-size: 0.5em;
+}
+.tooltips-temp {
+  fill: red;
+  font-weight: bolder;
+  font-size: 0.7em;
+}
