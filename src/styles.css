@@ -16,6 +16,9 @@ body {
   margin: 1.5rem auto;
   text-align: center;
 }
+.container svg {
+  overflow: visible;
+}
 
 .area {
   fill: url(#temperature-gradient);
